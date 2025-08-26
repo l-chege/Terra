@@ -1,0 +1,41 @@
+trigger:
+  - main
+
+pool:
+  vmImage: "ubuntu-latest"
+
+variables:
+  ARM_CLIENT_ID: $(servicePrincipalId)
+  ARM_CLIENT_SECRET: $(servicePrincipalKey)
+  ARM_SUBSCRIPTION_ID: $(subscriptionId)
+  ARM_TENANT_ID: $(tenantId)
+
+steps:
+  - checkout: self
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: "3.x"
+      addToPath: true
+
+  - script: |
+      python -m pip install --upgrade pip
+      pip install azure-cli
+    displayName: "Install Azure CLI"
+
+  - script: |
+      az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+    displayName: "Azure CLI Login"
+
+  - script: |
+      terraform init
+    displayName: "Terraform Init"
+
+  - script: |
+      terraform plan -out=tfplan
+    displayName: "Terraform Plan"
+
+  - script: |
+      terraform apply -input=false tfplan
+    displayName: "Terraform Apply"
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
