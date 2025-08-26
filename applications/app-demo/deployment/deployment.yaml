@@ -1,0 +1,52 @@
+# Trigger has been disabled for this pipeline
+trigger:
+  - none
+
+stages:
+  - stage: Deploy_Terraform
+    jobs:
+      - job: Deploy_Terraform
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          # Install Terraform
+          - task: TerraformInstaller@0
+            displayName: "Install"
+            inputs:
+              terraformVersion: "1.8.3"
+          # Initialize Terraform
+          - task: TerraformTaskV2@2
+            displayName: "Initialize Terraform"
+            inputs:
+              provider: "azurerm"
+              command: "init"
+              workingDirectory: "$(System.DefaultWorkingDirectory)/terraform"
+              backendServiceArm: "terraform-deploy-serviceconnection"
+              backendAzureRmResourceGroupName: "Terraform_States"
+              backendAzureRmStorageAccountName: "madstudioterraformstate"
+              backendAzureRmContainerName: "terraformjourney-state"
+              backendAzureRmKey: "terraform.tfstate"
+          # Validate Terraform configuration
+          - task: TerraformTaskV2@2
+            displayName: "Validate"
+            inputs:
+              provider: "azurerm"
+              command: "validate"
+              workingDirectory: "$(System.DefaultWorkingDirectory)/terraform"
+              environmentServiceNameAzureRM: "terraform-deploy-serviceconnection"
+          # Plan configuration changes
+          - task: TerraformTaskV2@2
+            displayName: "Plan"
+            inputs:
+              provider: "azurerm"
+              command: "plan"
+              workingDirectory: "$(System.DefaultWorkingDirectory)/terraform"
+              environmentServiceNameAzureRM: "terraform-deploy-serviceconnection"
+          # Apply configuration changes
+          - task: TerraformTaskV2@2
+            displayName: "Apply"
+            inputs:
+              provider: "azurerm"
+              command: "apply"
+              workingDirectory: "$(System.DefaultWorkingDirectory)/terraform"
+              environmentServiceNameAzureRM: "terraform-deploy-serviceconnection"
