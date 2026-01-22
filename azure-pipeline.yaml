@@ -1,0 +1,41 @@
+#pipeline to customize to build and deploy code
+#add steps to build, run tests, deploy and more etc
+#https://aka.ms/yaml
+
+variables:
+  - group: providers
+  - name: sub_cmn_id
+  - name: ref_location
+
+parameters:
+  - name: environment
+    displayName: Environment(consider uat/dev ad nonprod)
+    type: string
+    values:
+      - prod
+      - preprod
+      - nonprod
+
+  - name: subscription_name
+    displayName: Subscription
+    type: string
+    values:
+      - fun-demo
+      - fun
+      - app-demo
+
+  - name: location
+    displayName: Location
+    type: string
+    values:
+      - eastus
+      - westus2
+      - centralus
+
+trigger:
+  - none
+
+stages:
+  - stage: "Set_AgentPool"
+
+  - stage: "Set_AgentPool_Apply"
